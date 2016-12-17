@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO.Streams;
-using System.IO;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
 
 namespace DisableDrops
 {
-	[ApiVersion(1, 23)]
+	[ApiVersion(2, 0)]
     public class DisableDrops : TerrariaPlugin
     {
 		public override Version Version
