@@ -5,7 +5,7 @@ using TShockAPI;
 
 namespace DisableDrops
 {
-	[ApiVersion(2, 0)]
+	[ApiVersion(2, 1)]
     public class DisableDrops : TerrariaPlugin
     {
 		public override Version Version
