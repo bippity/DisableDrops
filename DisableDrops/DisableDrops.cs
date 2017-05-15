@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.IO.Streams;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
@@ -35,7 +37,7 @@ namespace DisableDrops
 
 		public override void Initialize()
 		{
-			ServerApi.Hooks.NetGetData.Register(this, GetData);
+			ServerApi.Hooks.NetGetData.Register(this, OnGetData);
 			Commands.ChatCommands.Add(new Command("disabledrops.edit", DisableDropsCommand, "disabledrops"));
 		}
 
@@ -43,7 +45,7 @@ namespace DisableDrops
 		{
 			if (disposing)
 			{
-				ServerApi.Hooks.NetGetData.Deregister(this, GetData);
+				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 			}
 			base.Dispose(disposing);
 		}
@@ -62,21 +64,38 @@ namespace DisableDrops
 				args.Player.SendWarningMessage("[Disable Drops] Drop disabling is disabled");
 		}
 
-		public void GetData(GetDataEventArgs e)
+		public void OnGetData(GetDataEventArgs args)
 		{
-			if (e.MsgID == PacketTypes.ItemDrop)
+			if (args.MsgID == PacketTypes.ItemDrop)
 			{
-				if (e.Handled)
+				if (args.Handled || !enabled)
 					return;
 
-				if (enabled)
+				TSPlayer player = TShock.Players[args.Msg.whoAmI];
+
+				if (!player.HasPermission("disabledrops.bypass"))
 				{
-					TSPlayer player = TShock.Players[e.Msg.whoAmI];
-					if (!player.HasPermission("disabledrops.bypass"))
+					using (var data = new MemoryStream(args.Msg.readBuffer, args.Index, args.Length))
 					{
-						e.Handled = true;
-						player.SendErrorMessage("[Disable Drops] You are not allowed to drop items.");
+						Int16 id = data.ReadInt16();
+						float posx = data.ReadSingle();
+						float posy = data.ReadSingle();
+						float velx = data.ReadSingle();
+						float vely = data.ReadSingle();
+						Int16 stacks = data.ReadInt16();
+						int prefix = data.ReadByte();
+						bool nodelay = data.ReadBoolean();
+						Int16 netid = data.ReadInt16();
+
+						Item item = new Item();
+						item.SetDefaults(netid);
+
+						if (id != 400)
+							return;
+
+						args.Handled = true;
 					}
+					player.SendErrorMessage("[Disable Drops] You are not allowed to drop items.");
 				}
 			}
 		}
